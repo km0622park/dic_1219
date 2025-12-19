@@ -140,9 +140,12 @@
 
         .search-box input {
             flex: 1;
+            width: 0;
+            /* 테두리 겹침 방지를 위해 너비 최소화 후 확장 */
+            min-width: 0;
             border: none;
             outline: none;
-            padding: 12px 15px;
+            padding: 10px 12px;
             font-size: 16px;
             font-family: inherit;
             color: var(--text-main);
@@ -706,52 +709,55 @@
             document.getElementById('resultsContainer').innerHTML = html;
         }
 
-        // --- AI Mnemonic Engine (Local) ---
+        // --- AI Mnemonic Engine (v2.0 - High Quality Simulation) ---
         const MNEMONIC_ENGINE = {
             rules: [
-                { pattern: /tion$/, tip: "'~션(tion)'. 무언가 액션(action)을 하는 상황을 떠올려보세요!" },
-                { pattern: /able$/, tip: "'~에이블(able)'. 할 수 있는 능력이 에이블(able)하다!" },
-                { pattern: /ly$/, tip: "'~리(ly)'. 요리나 처리(ly)하는 '방식'을 상상해보세요." },
-                { pattern: /pre/, tip: "'프리(pre)'. 미리, 먼저 일어나는 상황을 생각하세요." },
-                { pattern: /sub/, tip: "'서브(sub)'. 아래(subway)에 있거나 보조하는 역할!" }
+                { pattern: /tion$/, tip: "'-션(tion)'. 무언가 액션(action)을 하는 화려한 행샤(션)를 상상해보세요!" },
+                { pattern: /able$/, tip: "'-에이블(able)'. 무언가를 '할 수 있다(Able)'고 외치며 사과(애플-able)를 베어무는 능력!" },
+                { pattern: /ly$/, tip: "'-리(ly)'. 요리조리(ly) 처리하는 '방식'을 상상해보세요." },
+                { pattern: /ment$/, tip: "'-먼트(ment)'. 무언가 머(me)릿속으로 일(nt)을 처리하는 결과!" },
+                { pattern: /ful$/, tip: "'-풀(ful)'. 기쁨이 풀(ful)로 꽉 찬 가득한 상태!" },
+                { pattern: /un/, tip: "'-언(un)'. 안(un) 한다고 거절하는 반대의 의미!" },
+                { pattern: /re/, tip: "'-리(re)'. 다시 뒤(re-back)로 돌아가는 뒷걸음질!" }
             ],
             generate: function (word, translation) {
-                // Try rule-based first
+                const w = word.toLowerCase();
                 for (let r of this.rules) {
-                    if (r.pattern.test(word.toLowerCase())) return `${word}: ${r.tip} (${translation})`;
+                    if (r.pattern.test(w)) return `[분석 상세] 이 단어는 ${r.tip} '${translation}'라는 뜻과 연결하여 '그 행동을 끝까지(nt) 마치는 상상'을 해보세요!`;
                 }
-
-                // fallback: Syllable-based Kyung Sun-sik style pun simulation
-                const syllables = word.length > 4 ? word.substring(0, 4) : word;
-                return `'${syllables}...' 소리 내어 읽어보니 어떤 한국어 단어가 떠오르시나요? '${translation}'의 상황에서 그 소리가 들린다고 상상해보세요. (예: '${word}'를 외칠 때 '${translation}'하는 모습!)`;
+                if (w.length <= 4) return `[소리 각인] '${w}'! 소리 내어 외치며 '${translation}'하는 자신의 모습을 3번 상상하세요. 짧은 단어는 '이미지'로 외우는 게 가장 강력합니다.`;
+                const syllables = w.length > 4 ? w.substring(0, 4) : w;
+                return `[발음 연상] '${syllables}...' 소리를 내보세요. '${translation}' 상황에서 누군가 이 소리를 내며 다가온다고 상상해보세요. 소리와 뜻을 하나의 장면으로 묶는 마법입니다!`;
             }
         };
 
         async function generateAIMnemonic(word) {
             const container = document.getElementById('aiMnemonicContainer');
             const aiTitle = container.parentElement.querySelector('.ai-title');
+            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (지능적 분석 중...)";
 
-            // Get Korean meaning for context
+            await new Promise(r => setTimeout(r, 600));
+
             const query = word.toLowerCase();
             const transRes = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(query)}`);
             const transData = await transRes.json();
             const translation = (transData && transData[0] && transData[0][0]) ? transData[0][0][0] : "뜻 탐색 중";
 
-            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (생성 완료)";
-
+            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (고급 분석 완료)";
             const generatedTip = MNEMONIC_ENGINE.generate(word, translation);
 
             container.innerHTML = `
-                <div style="background: white; padding: 20px; border-radius: 15px; border: 2px dashed #ddd6fe; animation: containerPop 0.4s ease-out;">
-                    <p style="font-weight: 800; color: var(--secondary); margin-bottom: 12px; display: flex; align-items:center; gap:5px;">
-                        💡 마법사가 만든 즉석 연상법
-                    </p>
-                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 20px; font-weight: 600;">
+                <div style="background: white; padding: 22px; border-radius: 18px; border: 2.5px solid #ede9fe; animation: containerPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                        <span style="font-size: 20px;">🔮</span>
+                        <span style="font-weight: 800; color: var(--secondary); font-size: 15px;">단어 맞춤형 뇌과학 비법</span>
+                    </div>
+                    <p style="color: #374151; font-size: 16px; line-height: 1.7; margin-bottom: 22px; font-weight: 600; padding: 10px; border-left: 4px solid var(--secondary); background: #fdfaff;">
                         ${generatedTip}
                     </p>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button class="btn-premium btn-outline" style="border-color: #8b5cf6; color: #8b5cf6;" onclick="copyAIPrompt('${word.replace(/'/g, "\\'")}')">
-                            📋 더 정교한 프롬프트 복사하기
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button class="btn-premium btn-outline" style="border-color: #a855f7; color: #a855f7; background: #faf5ff; font-size: 14px;" onclick="copyAIPrompt('${word.replace(/'/g, "\\'")}')">
+                            💎 더 강력한 '제미나이용' 프롬프트 복사
                         </button>
                     </div>
                 </div>
