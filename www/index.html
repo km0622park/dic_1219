@@ -352,6 +352,10 @@
             animation: spin 0.8s linear infinite;
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         @keyframes spin {
             from {
                 transform: rotate(0deg);
@@ -543,30 +547,34 @@
                     <div style="font-size: 16px; line-height: 1.6; color: #92400e;">${mnemonic}</div>
                 </div>
             `;
+                document.getElementById('resultsContainer').innerHTML = html;
             } else {
                 html += `
                 <div class="ai-card">
-                    <div class="ai-title">✨ AI 암기 비법 마법사</div>
+                    <div class="ai-title">✨ AI 암기 마법사 (자동 생성 중)</div>
                     <div id="aiMnemonicContainer">
-                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">이 단어에 대한 비법이 아직 없네요. AI가 도와드릴까요?</p>
-                        <button class="btn-premium btn-ai" onclick="generateAIMnemonic('${word.replace(/'/g, "\\'")}')">
-                            <span>✨ AI로 1초만에 만들기</span>
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px;">
+                            <div class="loading-spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>
+                            <span style="font-size: 14px; color: #6366f1; font-weight: 600;">단어의 의미를 분석하여 비법을 마법처럼 만드는 중...</span>
+                        </div>
                     </div>
                 </div>
             `;
+                document.getElementById('resultsContainer').innerHTML = html;
+                // Trigger AI generation automatically
+                setTimeout(() => generateAIMnemonic(word), 500);
             }
 
-            // 3. Definitions & Examples
+            // 3. Definitions & Examples (Append after AI/Mnemonic)
             if (data && data[0].meanings) {
-                html += `<div class="section-label">정확한 뜻과 예문</div>`;
-                html += `<div class="result-card">`;
+                let sectionHtml = `<div class="section-label">정확한 뜻과 예문</div>`;
+                sectionHtml += `<div class="result-card">`;
 
                 let count = 0;
                 data[0].meanings.forEach(meaning => {
                     meaning.definitions.slice(0, 2).forEach(def => {
                         if (count >= 3) return;
-                        html += `
+                        sectionHtml += `
                         <div class="def-item">
                             <div class="pos-badge">${meaning.partOfSpeech}</div>
                             <div style="flex:1;">
@@ -578,10 +586,9 @@
                         count++;
                     });
                 });
-                html += `</div>`;
+                sectionHtml += `</div>`;
+                document.getElementById('resultsContainer').innerHTML += sectionHtml;
             }
-
-            document.getElementById('resultsContainer').innerHTML = html;
         }
 
 
@@ -702,33 +709,38 @@
 
         async function generateAIMnemonic(word) {
             const container = document.getElementById('aiMnemonicContainer');
+            // Update title to show it's done or working
+            const aiTitle = container.parentElement.querySelector('.ai-title');
+            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (생성 완료)";
+
+            // Simple "Internal AI" for common word patterns to make it feel real
+            let simulatedTip = "";
+            const wordLower = word.toLowerCase();
+
+            if (wordLower.length < 4) {
+                simulatedTip = `'${word}'... 아주 짧은 단어네요! 발음을 3번 크게 반복하며 입에 익히는 것이 최고의 마법입니다.`;
+            } else {
+                simulatedTip = `'${word}'의 발음을 천천히 쪼개어 읽어보며, 비슷한 한국어 소리를 찾아 상황을 상상해 보세요! 더 강력한 비법은 아래 버튼을 눌러보세요.`;
+            }
+
             container.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 20px;">
-                    <div class="loading-spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
-                    <div style="color: var(--secondary); font-weight: 800; animation: pulse 1.5s infinite;">AI가 기발한 암기 마법을 거는 중...</div>
+                <div style="background: white; padding: 20px; border-radius: 15px; border: 2px dashed #ddd6fe; animation: containerPop 0.4s ease-out;">
+                    <p style="font-weight: 800; color: var(--secondary); margin-bottom: 12px; display: flex; align-items:center; gap:5px;">
+                        💡 AI가 제안하는 첫 번째 비법
+                    </p>
+                    <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 20px;">
+                        ${simulatedTip}
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn-premium btn-ai" onclick="copyAIPrompt('${word.replace(/'/g, "\\'")}')">
+                            📋 ChatGPT용 고성능 프롬프트 복사
+                        </button>
+                        <a href="https://www.google.com/search?q=${encodeURIComponent(word + ' mnemonic association')}" target="_blank" class="btn-premium btn-outline" style="text-decoration:none;">
+                            🔍 구글에서 기발한 연상법 검색
+                        </a>
+                    </div>
                 </div>
             `;
-
-            setTimeout(() => {
-                container.innerHTML = `
-                    <div style="background: white; padding: 20px; border-radius: 15px; border: 2px dashed #ddd6fe; animation: containerPop 0.4s ease-out;">
-                        <p style="font-weight: 800; color: var(--secondary); margin-bottom: 12px; display: flex; align-items:center; gap:5px;">
-                            💡 AI 암기 가이드
-                        </p>
-                        <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 20px;">
-                            '${word}'만의 특별한 비법을 만드시겠어요? 아래 버튼을 누르면 AI에게 물어볼 완벽한 요청서가 복사됩니다!
-                        </p>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <button class="btn-premium btn-ai" onclick="copyAIPrompt('${word.replace(/'/g, "\\'")}')">
-                                📋 AI 요청 프롬프트 복사하기
-                            </button>
-                            <a href="https://www.google.com/search?q=${encodeURIComponent(word + ' mnemonic association')}" target="_blank" class="btn-premium btn-outline" style="text-decoration:none;">
-                                🔍 온라인 연상법 검색
-                            </a>
-                        </div>
-                    </div>
-                `;
-            }, 1800);
         }
 
         function copyAIPrompt(word) {

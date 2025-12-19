@@ -25,13 +25,51 @@
 > 앱 이름: **나만의 사전**
 > 앱 아이콘: 기본 아이콘으로 생성됩니다 (추후 커스터마이징 가능).
 
-## 5. [중요] Actions 탭에 아무것도 안 뜰 때 (Troubleshooting)
+## 5. [긴급] Actions 탭이 여전히 안 보일 때 (가장 확실한 해결책)
 
-만약 **Actions** 탭을 눌렀을 때 "Get started with GitHub Actions"라는 안내 문구만 보인다면, 아래 사항을 확인해 주세요.
+업로드 방식에서 실수가 생길 수 있으므로, **GitHub 사이트에서 직접 파일을 만드는 방법**이 가장 확실합니다. 아래 순서대로 클릭만 하세요!
 
-1.  **폴더 구조 확인**: GitHub 저장소의 코드 파일 목록에 `.github/workflows/build.yml` 경로가 정확히 있는지 확인해 주세요. (점`.`으로 시작하는 폴더는 숨김 폴더이므로 업로드 시 누락되기 쉽습니다.)
-2.  **브랜치 이름 확인**: 현재 수정한 코드가 `main` 또는 `master` 브랜치에 업로드되었는지 확인해 주세요. 워크플로우는 이 두 브랜치에 푸시될 때만 작동합니다.
-3.  **파일 내용 확인**: 저장소에 업로드된 `build.yml` 파일 내용을 클릭해서 열어보시고, 내용이 비어있지 않은지 확인해 주세요.
-4.  **수동 실행 시도**: 만약 폴더가 있는데도 안 뜬다면, `build.yml` 파일의 `on:` 섹션 아래에 `workflow_dispatch:`를 추가하면 수동으로 실행 버튼을 만들 수 있습니다. (원하실 경우 제가 코드를 수정해 드릴 수 있습니다.)
+### 방법 2: GitHub 웹사이트에서 직접 작성하기
 
-**가장 흔한 이유**: 로컬에서 GitHub으로 코드를 올릴 때 `.github` 폴더를 포함하지 않고 올리는 경우입니다. 저장소 메인 페이지에 `.github` 폴더가 보이는지 꼭 확인해 주세요!
+1.  본인의 GitHub 저장소 메인 페이지에서 **[Actions]** 탭을 클릭합니다.
+2.  가운데에 있는 **"set up a workflow yourself"** (파란색 글씨) 버튼을 클릭합니다.
+3.  화면에 에디터가 나타나면, 원래 있던 내용을 다 지우고 아래 코드를 **그대로 복사해서 붙여넣으세요**.
+    - 파일 이름은 상관없지만 `main.yml` 등으로 설정되어 있을 것입니다.
+
+```yaml
+name: Build Android APK
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - run: npm install
+      - run: |
+          mkdir -p www
+          npx cap add android || true
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dictionary-app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+4.  오른쪽 상단의 **[Commit changes...]** 버튼을 누르고, 다시 한번 초록색 버튼을 눌러 저장합니다.
+5.  이제 **Actions** 탭을 다시 누르면 목록에 작업이 나타날 것입니다!
+
+**왜 이렇게 하나요?**: 로컬에서 폴더를 올릴 때 `.github` 폴더가 누락되는 문제를 완벽하게 방지할 수 있는 방법입니다.
