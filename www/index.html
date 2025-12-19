@@ -710,120 +710,129 @@
             document.getElementById('resultsContainer').innerHTML = html;
         }
 
-        // --- AI Mnemonic Engine (v4.0 - Kyung Sun-sik Kid Edition) ---
+        // --- AI Mnemonic Engine (v6.0 - Universal Phonetic Pun Engine) ---
         const MNEMONIC_ENGINE = {
-            // 소리-상황 연결 사전 (더 정교한 말장난)
-            punBank: {
-                "trai": "트레일(트레일러)... 기차가 질질 '끌려(trail)'가는 모습",
-                "form": "폼(form)... 멋진 '모양'을 잡는 폼생폼사",
-                "ex": "엑스(ex)... 밖으로 엑스(X)표 치며 '나가'기",
-                "pre": "프리(pre)... '미리' 준비하는 프리미엄",
-                "sub": "서브(sub)... 지하철(subway)처럼 '아래'에 있는 것",
-                "com": "컴(com)... '함께' 모여서 컴컴한 밤에 파티",
-                "inter": "인터(inter)... 사람들 '사이'에서 인터넷 하기",
-                "ship": "쉽(ship)... '쉽'게 '배'를 타요!",
-                "cap": "캡(cap)... '캡'틴이 '모자'를 쓰고!",
-                "tri": "트리(tri)... 나무 '3'그루!",
-                "pen": "펜(pen)... '펜'으로 글을 쓰는 '벌(penalty)'!",
-                "dis": "디스(dis)... '반대'하고 '멀리' 하는 디스(dis)전",
-                "uni": "유니(uni)... '하나'의 유니폼"
+            // 소리 조각 사전 (음절별 한국어 의미 연결)
+            syllableMap: {
+                "tra": "틀에", "in": "안", "con": "큰", "de": "디(D/뒤)", "re": "리(다시)",
+                "pro": "프로", "ex": "엑(바깥)", "sub": "서브(아래)", "ad": "애드(더하기)",
+                "ab": "애브(벗어난)", "dis": "디스(반대)", "uni": "유니(하나)", "tri": "트리(셋)",
+                "form": "폼(모양)", "port": "포트(항구)", "spect": "스펙(보다)", "dict": "딕트(말)",
+                "ject": "젝트(던지다)", "tract": "트랙(끌다)", "struct": "스트럭(짓다)",
+                "press": "프레스(누르다)", "vent": "벤트(오다)", "pose": "포즈(두다)",
+                "cap": "캡(머리/모자)", "man": "맨(손)", "ped": "패드(발)", "fin": "핀(끝)",
+                "serv": "서브(지키다)", "tend": "텐드(뻗다)", "vis": "비즈(보다)", "aud": "오디(듣다)",
+                "ship": "쉽(배)", "ment": "먼트(결과)", "ness": "니스(성질)", "ful": "풀(가득)",
+                "less": "리스(없는)", "able": "에이블(가능)", "tion": "션(행동)", "ity": "이티(상태)",
+                // 소리 중심 말장난 조각 (초등 눈높이)
+                "ba": "바(bar)", "ca": "카(car)", "da": "다(all)", "fa": "파(green onion)",
+                "ga": "가(go)", "ha": "하(laugh)", "la": "라(ra)", "ma": "마(yam)",
+                "pa": "파(wave)", "sa": "사(buy)", "ta": "타(ride)", "wa": "와(wow)",
+                "tea": "티(tea)", "see": "씨(seed)", "bee": "비(rain)", "key": "키(key)",
+                "me": "미(me)", "you": "유(you)", "hi": "하이(hi)"
             },
 
-            rules: [
-                { pattern: /tion$/, tip: "'-션(tion)'. 화려한 '행샤(션)'를 벌이는 큰 사건!" },
-                { pattern: /able$/, tip: "'-에이블(able)'. 능력이 '에이(A)급'이라 '할 수 있는'!" },
-                { pattern: /ly$/, tip: "'-리(ly)'. 요리'조리(ly)' 처리하는 '방법'!" },
-                { pattern: /ment$/, tip: "'-먼트(ment)'. 머릿속에 '먼(me)가' 남는 '결과'!" }
-            ],
-
-            generate: function (word, translation) {
+            // 음절 분해 및 말장난 조합기
+            analyze: function (word) {
                 const w = word.toLowerCase();
-                let story = "";
+                let chunks = [];
+                let i = 0;
 
-                // 1. Phonetic Match (가장 강력한 말장난)
-                for (let key in this.punBank) {
-                    if (w.startsWith(key)) {
-                        story = `[소리 마법] 이 단어는 '${key}' 소리로 시작하네요! **${this.punBank[key]}**라는 장면을 떠올리며 '${translation}' 뜻을 합쳐보세요. 딱 맞죠?`;
-                        break;
-                    }
-                }
-
-                // 2. Rule-based Match (접미사)
-                if (!story) {
-                    for (let r of this.rules) {
-                        if (r.pattern.test(w)) {
-                            story = `[꼬리 마법] 단어 끝에 **${r.tip}**가 붙어있네요! '${translation}'라는 뜻을 가진 주인공이 이 요술을 부리는 장면을 상상해봐요!`;
+                // 욕심많은 매칭 (Longest match first)
+                while (i < w.length) {
+                    let matched = false;
+                    for (let len = 5; len >= 2; len--) {
+                        let sub = w.substring(i, i + len);
+                        if (this.syllableMap[sub]) {
+                            chunks.push({ sound: sub, pun: this.syllableMap[sub] });
+                            i += len;
+                            matched = true;
                             break;
                         }
                     }
+                    if (!matched) {
+                        chunks.push({ sound: w[i], pun: w[i].toUpperCase() });
+                        i++;
+                    }
                 }
+                return chunks;
+            },
 
-                // 3. Last Resort: Creative Visualization (Gemini Style)
-                if (!story) {
-                    const chunks = w.match(/.{1,3}/g) || [w];
-                    const soundIdx = w.length % 3;
-                    const imaginativeStories = [
-                        `단어를 거울에 비춰보면 혹시 '${translation}'하는 모습이 보이지 않나요? '${w}'라고 부드럽게 소리 내며 '${translation}'하는 귀여운 요정을 그려보세요!`,
-                        `'${chunks[0]}...' 소리를 3번 반복해보세요. 마치 '${translation}'할 때 나는 기분 좋은 소리처럼 들릴 거예요!`,
-                        `이 단어의 모양이 마치 '${translation}'가 필요한 길쭉한 사탕처럼 생겼네요! '${w}' 한 입 먹고 단어를 꿀꺽 외워버려요!`
-                    ];
-                    story = `[상상력 비법] ${imaginativeStories[soundIdx]}`;
+            generate: function (word, translation) {
+                const w = word.toLowerCase();
+                const analysis = this.analyze(w);
+
+                // 상위 2~3개 조각으로 스토리 구성
+                const mainChunks = analysis.filter(c => c.sound.length > 1).slice(0, 2);
+
+                if (mainChunks.length >= 2) {
+                    const pun1 = mainChunks[0].pun;
+                    const pun2 = mainChunks[1].pun;
+                    return `[음성 분석 비법] 친구야, 이 단어는 소리 안에 **'${pun1}'**과 **'${pun2}'**이 숨어있어! "**${pun1}** 하다가 **${pun2}** 해서 결국 **${translation}** 하게 되었다"라고 상상해봐. 경선식 선생님도 깜짝 놀랄 완벽한 연결이지?`;
+                } else if (mainChunks.length === 1) {
+                    const pun = mainChunks[0].pun;
+                    return `[소리 각인 비법] 이 단어의 핵심 소리는 **'${pun}'**이야! 무엇보다 **${pun}**을 크게 외치면서 '${translation}'하는 장면을 머릿속 스케치북에 큼직하게 그려봐. 이미지가 생생할수록 마법처럼 외워질 거야!`;
+                } else {
+                    // 글자별 연상 (최소한의 장치)
+                    const start = w[0].toUpperCase();
+                    return `[마법 알파벳 비법] 이 단어의 첫 글자 **'${start}'**를 기억해! 마치 **'${start}'** 모양의 요정이 나타나서 우리에게 **'${translation}'**라고 속삭이는 장면을 상상해볼까? 소리를 내며 입모양을 크게 벌려봐!`;
                 }
-
-                return story;
             }
         };
 
         async function generateAIMnemonic(word) {
             const container = document.getElementById('aiMnemonicContainer');
             const aiTitle = container.parentElement.querySelector('.ai-title');
-            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (천재적인 분석 중...)";
+            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (초정밀 음성 분석 중...)";
 
-            // 시각적 피드백 강화
             container.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 20px;">
-                    <div class="loading-spinner" style="width: 30px; height: 30px; border-width: 3px;"></div>
-                    <div style="color: var(--secondary); font-size: 14px; font-weight: 600; text-align:center;">
-                        영단어의 소리와 '${word}'의 의미를 결합하여<br>최고의 말장난 비법을 찾고 있습니다...
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 25px;">
+                    <div style="position: relative;">
+                        <div class="loading-spinner" style="width: 50px; height: 50px; border-width: 5px; border-top-color: #f59e0b;"></div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px;">🎙️</div>
+                    </div>
+                    <div style="color: #b45309; font-size: 14px; font-weight: 800; text-align:center; line-height: 1.6;">
+                        단어의 발음을 미세한 음절 단위로 쪼개어<br>한국어 말장난과 최적으로 매칭하고 있습니다...
                     </div>
                 </div>
             `;
 
-            await new Promise(r => setTimeout(r, 1200));
+            await new Promise(r => setTimeout(r, 2000)); // 분석 느낌 극대화
 
             const query = word.toLowerCase();
             const transRes = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(query)}`);
             const transData = await transRes.json();
             const translation = (transData && transData[0] && transData[0][0]) ? transData[0][0][0] : "뜻 탐색 중";
 
-            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (분석 완료!)";
+            if (aiTitle) aiTitle.innerText = "✨ AI 암기 마법사 (전단어 음성 분석 완료)";
             const generatedTip = MNEMONIC_ENGINE.generate(word, translation);
 
             container.innerHTML = `
-                <div style="background: white; padding: 22px; border-radius: 18px; border: 2.5px solid #ddd6fe; animation: containerPop 0.5s ease-out; position:relative;">
-                    <div style="position:absolute; top:-12px; left:20px; background:var(--secondary); color:white; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:800;">MAGIC TIP</div>
-                    <p style="color: #1e293b; font-size: 16px; line-height: 1.7; margin-bottom: 20px; font-weight: 700;">
+                <div style="background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%); padding: 25px; border-radius: 20px; border: 3px solid #fcd34d; animation: containerPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); position:relative; box-shadow: 0 12px 30px -10px rgba(245, 158, 11, 0.3);">
+                    <div style="position:absolute; top:-14px; left:25px; background:linear-gradient(135deg, #f59e0b, #d97706); color:white; padding:4px 18px; border-radius:20px; font-size:12px; font-weight:900; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);">PHONETIC MASTER</div>
+                    <p style="color: #78350f; font-size: 17px; line-height: 1.8; margin-bottom: 25px; font-weight: 800;">
                          ${generatedTip}
                     </p>
-                    <button class="btn-premium btn-outline" style="border-color: #a855f7; color: #a855f7; background: #faf5ff; font-size: 13px;" onclick="copyAIPrompt('${word.replace(/'/g, "\\'")}')">
-                        💎 원조 고퀄리티 제미나이 비법 복사
-                    </button>
+                    <div style="background: rgba(255,255,255,0.6); padding: 15px; border-radius: 12px; border: 1px dashed #f59e0b;">
+                         <p style="font-size: 13px; color: #92400e; margin-bottom: 12px; font-weight: 700;">💡 더 풍부한 연상력을 위해 제미나이와 대화해보세요!</p>
+                         <button class="btn-premium" style="background: #f59e0b; color: white; border: none; font-size: 14px; padding: 12px; width: 100%; font-weight: 800;" onclick="copyAIPrompt('${word.replace(/'/g, "\\'")}')">
+                            💎 제미나이 전용 3단계 연상 비법 복사
+                         </button>
+                    </div>
                 </div>
             `;
         }
 
         function copyAIPrompt(word) {
-            const prompt = `영단어 '${word}'를 한국 사람들이 쉽게 외울 수 있도록 경선식 스타일(발음을 이용한 말장난 또는 상황 연상)로 기발한 암기 팁을 만들어줘. 짧고 강렬하게!`;
+            const prompt = `영단어 '${word}'를 초등학생들이 단 한 번에 외울 수 있도록 '경선식 스타일'(발음을 이용한 말장난과 생동감 넘치는 상황 연상)로 최고의 암기 비법을 단계별로 3가지 만들어줘. 아이들이 깔깔 웃을 정도로 쉽고 재미있어야 해!`;
             navigator.clipboard.writeText(prompt).then(() => {
                 const btn = event.currentTarget;
                 const originalText = btn.innerHTML;
-                btn.innerHTML = "✅ 복사 완료! AI에 붙여넣으세요";
-                btn.style.background = "#22c55e";
-                btn.style.color = "white";
+                btn.innerHTML = "✅ 마법 프롬프트 복사 완료!";
+                btn.style.background = "#059669";
                 setTimeout(() => {
                     btn.innerHTML = originalText;
-                    btn.style.background = "";
-                    btn.style.color = "#8b5cf6";
+                    btn.style.background = "#f59e0b";
                 }, 2000);
             });
         }
