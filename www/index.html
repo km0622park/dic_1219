@@ -710,7 +710,7 @@
             document.getElementById('resultsContainer').innerHTML = html;
         }
 
-        // --- REAL Kyung Sun-sik Database (v8.0 Verification Source) ---
+        // --- REAL Kyung Sun-sik Database (v10.0 Curated Source) ---
         const REAL_KSS_DB = {
             "abandon": "아버지가(abba) 돈을(don) 주고 **버리다, 포기하다**",
             "felon": "곤장을 팰 놈(felon) -> **중죄인**",
@@ -746,82 +746,95 @@
             "utmost": "어트모스트(어떻게든 모으다) 최선! -> **최선의, 극도의**",
             "vigorous": "비거러쓰(비가 오나 눈이 오나 쓰다) 활발한 -> **활기찬**",
             "wretched": "레치드(래치/걸쇠에 걸린) 가련한 -> **가련한, 비참한**",
-            "yearn": "연(이별한 연인)을 그리워하다 -> **동경하다, 갈망하다**"
+            "yearn": "연(이별한 연인)을 그리워하다 -> **동경하다, 갈망하다**",
+            "trailer": "트레(trai)에 실어(l) 질질 끌고 가는 차 -> **트레일러, 예인차**"
         };
 
-        // --- AI Mnemonic Engine (v8.0 - Direct Context Injector) ---
+        // --- Zero-Key Magic Engine (v10.0 - Hybrid Intelligent Injector) ---
         const MNEMONIC_ENGINE = {
-            generate: function (word, translation) {
-                const w = word.toLowerCase();
+            // 지능형 소리 분석 DB (Fallback용)
+            punBank: {
+                "tra": "틀에 / 트레", "tri": "트리 / 3!", "con": "큰 / 컨",
+                "com": "컴(함께)", "pre": "프리(미리)", "pro": "프로",
+                "sub": "서브(아래)", "inter": "인터(사이)", "dis": "디스",
+                "uni": "유니(하나)", "ex": "엑(바깥)", "in": "인(안)",
+                "re": "리(다시)", "de": "디(내려가는)", "per": "퍼(부어)",
+                "sur": "서(서있는)", "auto": "오토", "tele": "텔레",
+                "ap": "애플", "ba": "바", "ca": "카", "da": "다",
+                "fa": "파", "ga": "가", "ha": "하", "la": "라",
+                "ma": "마", "pa": "파", "sa": "사", "ta": "타",
+                "wa": "와", "tea": "티", "bee": "비", "key": "키",
+                "me": "미", "you": "유", "pen": "펜", "cap": "캡",
+                "can": "캔", "cut": "컷", "sun": "선", "moon": "문",
+                "star": "스타", "sky": "스카이", "air": "에어",
+                "sea": "씨", "ship": "쉽", "form": "폼", "port": "포트"
+            },
 
-                // 1. 진짜 경선식 DB 먼저 확인
-                if (REAL_KSS_DB[w]) {
-                    return {
-                        isVerified: true,
-                        text: `[경선식 오피셜 비법] ${REAL_KSS_DB[w]}`
-                    };
+            generateLocal: function (word, translation) {
+                const w = word.toLowerCase();
+                if (REAL_KSS_DB[w]) return { isReal: true, text: REAL_KSS_DB[w] };
+
+                // 간단 음절 매칭 (0.1초 이내 소요)
+                let matched = [];
+                for (let key in this.punBank) {
+                    if (w.includes(key)) matched.push(this.punBank[key]);
                 }
 
-                // 2. 없을 경우 AI 연상법 (기존 로직 유지하되 안내 문구 추가)
                 const letter = w[0].toUpperCase();
-                return {
-                    isVerified: false,
-                    text: `[AI 마법 분석] 친구야! '${word}'는 '${letter}' 요정이 '${translation}'을 도와주는 단어야. '${w}!'라고 크게 외쳐봐! (진짜 비법을 찾으시나요? 아래 배경 검색 버튼을 눌러보세요!)`
-                };
+                let tip = matched.length > 0
+                    ? `[지능형 분석] '${matched[0]}' 느낌으로 '${translation}'을 외워봐! ✨`
+                    : `[음절 분석] '${letter}' 요정이 '${translation}'을 도와주고 있어! (강력 비법 탐색 중...)`;
+
+                return { isReal: false, text: tip };
             }
         };
 
         async function generateAIMnemonic(word) {
             const container = document.getElementById('aiMnemonicContainer');
             const aiTitle = container.parentElement.querySelector('.ai-title');
-            if (aiTitle) aiTitle.innerText = "🔍 비법 엔진 가동 (v8.0)";
+            if (aiTitle) aiTitle.innerText = "🪄 마법 비법 엔진 가동 (v10.0)";
 
-            container.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px;">
-                    <div class="loading-spinner" style="width: 50px; height: 50px;"></div>
-                    <div style="color: #4338ca; font-size: 14px; font-weight: 800; text-align:center;">
-                        먼저 보물 창고에서 진짜 비법을 찾고 있습니다...
-                    </div>
-                </div>
-            `;
-
-            await new Promise(r => setTimeout(r, 1000));
-
+            // 1. 단어 뜻 가져오기
             const query = word.toLowerCase();
             const transRes = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(query)}`);
             const transData = await transRes.json();
             const translation = (transData && transData[0] && transData[0][0]) ? transData[0][0][0] : "뜻 탐색 중";
 
-            const result = MNEMONIC_ENGINE.generate(word, translation);
+            // 2. 즉시 로컬 비법 노출 (0.1초)
+            const localResult = MNEMONIC_ENGINE.generateLocal(word, translation);
+            updateMnemonicUI(container, aiTitle, localResult, false);
 
-            if (aiTitle) aiTitle.innerText = result.isVerified ? "✅ 진짜 경선식 비법 발견" : "🤔 AI 연상법 (진짜를 찾으시나요?)";
+            // 3. 만약 로컬 DB에 없는 단어라면 자동으로 배경 검색 (1~2초)
+            if (!localResult.isReal) {
+                autoSearchKSSBackground(word, container, aiTitle);
+            }
+        }
+
+        function updateMnemonicUI(container, titleEl, result, isUpdate) {
+            if (titleEl) {
+                titleEl.innerText = result.isReal || result.isLive ? "✅ 진짜 암기 비법 발견" : "🤔 지능형 암기 가이드";
+            }
+
+            const badgeColor = result.isReal ? '#f59e0b' : (result.isLive ? '#0ea5e9' : '#94a3b8');
+            const badgeText = result.isReal ? 'VERIFIED KSS' : (result.isLive ? 'LIVE KSS' : 'SMART AI');
 
             container.innerHTML = `
-                <div style="background: ${result.isVerified ? 'linear-gradient(135deg, #fff7ed 0%, #fff 100%)' : 'white'}; padding: 25px; border-radius: 20px; border: 3px solid ${result.isVerified ? '#f97316' : '#e2e8f0'}; position:relative; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);">
-                    ${result.isVerified ? '<div style="position:absolute; top:-14px; left:25px; background:#f97316; color:white; padding:3px 15px; border-radius:20px; font-size:11px; font-weight:900;">VERIFIED KSS</div>' : ''}
-                    <p style="color: #1e293b; font-size: 17px; line-height: 1.8; font-weight: 700; margin-bottom: 20px;">
+                <div style="background: white; padding: 25px; border-radius: 22px; border: 3px solid ${badgeColor}; position:relative; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.1); animation: ${isUpdate ? 'containerPop 0.5s ease' : 'none'};">
+                    <div style="position:absolute; top:-14px; left:25px; background:${badgeColor}; color:white; padding:3px 15px; border-radius:20px; font-size:11px; font-weight:900; letter-spacing:0.5px;">${badgeText}</div>
+                    <p style="color: #1e293b; font-size: 17px; line-height: 1.8; font-weight: 700; margin: 0;">
                          ${result.text}
                     </p>
-                    <div style="border-top: 1px dashed #cbd5e1; padding-top: 15px;">
-                         <button class="btn-premium" style="background: #0ea5e9; color: white; border: none; font-size: 14px; padding: 12px; width:100%; font-weight:800;" onclick="searchKSSBackground('${word.replace(/'/g, "\\'")}')">
-                            🌐 앱 내에서 진짜 비법 강제 추출하기
-                         </button>
-                    </div>
+                    ${!result.isReal && !result.isLive ? `
+                        <div style="margin-top:15px; display:flex; align-items:center; gap:8px;">
+                            <div class="loading-spinner" style="width:14px; height:14px; border-width:2px; border-top-color:#0ea5e9;"></div>
+                            <span style="font-size:12px; color:#64748b; font-weight:700;">배경에서 진짜 비법을 더 찾아보고 있습니다...</span>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
 
-        async function searchKSSBackground(word) {
-            const container = document.getElementById('aiMnemonicContainer');
-            const originalHTML = container.innerHTML;
-
-            container.innerHTML = `
-                <div style="background: #f8fafc; padding: 25px; border-radius: 20px; border: 2px solid #0ea5e9; text-align:center;">
-                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 15px;"></div>
-                    <p style="color: #0369a1; font-weight: 800; font-size: 14px;">네이버/블로그에서 진짜 비법을 파싱 중입니다...<br>이 작업은 2~3초가 소요됩니다.</p>
-                </div>
-            `;
-
+        async function autoSearchKSSBackground(word, container, titleEl) {
             try {
                 const searchUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://search.naver.com/search.naver?query=경선식+영단어+연상법+${word}`)}`;
                 const response = await fetch(searchUrl);
@@ -832,56 +845,20 @@
 
                 let foundMnemonic = "";
                 for (const text of snippets) {
-                    if (text.includes("...") || text.includes("~") || text.includes("!") || text.includes("뜻")) {
-                        if (text.length > 5 && text.length < 100) {
+                    if (text.includes("...") || text.includes("~") || text.includes("!") || text.includes("뜻") || text.includes("는")) {
+                        if (text.length > 5 && text.length < 120 && (text.includes(word) || text.length > 20)) {
                             foundMnemonic = text;
                             break;
                         }
                     }
                 }
 
-                if (!foundMnemonic && snippets.length > 0) {
-                    foundMnemonic = snippets[0].substring(0, 80) + "...";
-                }
-
                 if (foundMnemonic) {
-                    container.innerHTML = `
-                        <div style="background: #f0f9ff; padding: 25px; border-radius: 20px; border: 3px solid #0ea5e9; position:relative; animation: containerPop 0.5s ease;">
-                            <div style="position:absolute; top:-14px; left:25px; background:#0ea5e9; color:white; padding:3px 15px; border-radius:20px; font-size:11px; font-weight:900;">LIVE KSS SNIPPET</div>
-                            <p style="color: #0c4a6e; font-size: 16px; line-height: 1.8; font-weight: 700;">
-                                 [검색 결과 추출] ${foundMnemonic}
-                            </p>
-                            <p style="font-size: 11px; color: #64748b; margin-top: 15px; font-weight: 600;">* 이 결과는 인터넷 검색을 통해 실시간으로 가져왔습니다.</p>
-                        </div>
-                    `;
-                } else {
-                    throw new Error("No snippet found");
+                    updateMnemonicUI(container, titleEl, { isLive: true, text: `[실시간 추출] ${foundMnemonic}` }, true);
                 }
             } catch (e) {
-                container.innerHTML = `
-                    <div style="padding: 20px; text-align:center;">
-                        <p style="color: #ef4444; font-weight: 700; margin-bottom:15px;">배경 검색 중 오류가 발생했습니다.</p>
-                        <button class="btn-premium" onclick="location.href='https://search.naver.com/search.naver?query=경선식+영단어+연상법+${word}'" style="background:#059669; color:white; font-size:13px; padding:10px;">
-                            네이버에서 직접 보기 (외부 링크)
-                        </button>
-                    </div>
-                `;
-                setTimeout(() => { if (!container.querySelector('button')) container.innerHTML = originalHTML; }, 4000);
+                // 실패 시 소리 없이 로컬 결과 유지
             }
-        }
-
-        function copyAIPrompt(word) {
-            const prompt = `영단어 '${word}'를 초등학생이 단 한 번에 외울 수 있도록 '경선식 스타일'(발음을 이용한 말장난과 생생한 상황 연상)로 세상에서 가장 강력한 암기 비법 3가지만 만들어줘. 아이들이 깔깔 웃으며 머릿속에 바로 저장되게 해줘!`;
-            navigator.clipboard.writeText(prompt).then(() => {
-                const btn = event.currentTarget;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = "✅ 우주 최강 비법 복사 완료!";
-                btn.style.background = "#065f46";
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.background = "linear-gradient(135deg, #8b5cf6, #6d28d9)";
-                }, 2000);
-            });
         }
 
         function showError() {
